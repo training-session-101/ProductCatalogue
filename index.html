@@ -153,20 +153,15 @@
 
 			// get the form data
 			// there are many ways to get this data using jQuery (you can use the class or id also)
-			var formData = {
-				'productid': $('input[name=productid]').val()
-			};
+			var formData = {};
 
-			var params = {
-				//This is where any header, path, or querystring request params go. The key is the parameter named as defined in the API
-				//'productid': $('input[name=productid]').val()
-			};
+			var params = {};
 
 			var body = {
 				//This is where you define the body of the request
 				"operation": "create",
 				"payload": {
-					"TableName": "product",
+					"TableName": "Product",
 					"Item": {
 						"productid": $('input[name=productid]').val(),
 						"name": $('input[name=pname]').val(),
@@ -176,21 +171,15 @@
 			};
 			var additionalParams = {
 				//If there are any unmodeled query parameters or headers that need to be sent with the request you can add them here
-				headers: {
-
-				},
-				//queryParams: {
-				//'productid': $('input[name=productid]').val()
-				//}
+				headers: {}
 			};
 
-			apigClient.productPost(params, body, additionalParams)
+			apigClient.productdemoPost(params, body, additionalParams)
 				.then(function (result) {
 					console.log(result.data);
 					dataResult = result.data;
-					var resultStr = '<b>Product Added</b>';
+					var resultStr = 'Product Added';
 					console.log(resultStr);
-					console.log("error");
 				});
 			return false;
 		});
