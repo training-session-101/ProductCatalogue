@@ -3,7 +3,7 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Demo Bookstore</title>
+    <title>Demo Product Catalogue</title>
 
     <style type="text/css">
         .form-style-1 {
@@ -105,6 +105,9 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
     <script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
 
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+
+    <script src="aws-sdk.js"></script>
     <script src="aws-cognito-sdk.min.js"></script>
     <script src="amazon-cognito-identity.min.js"></script>
 
@@ -120,127 +123,126 @@
     <script type="text/javascript" src="lib/apiGatewayCore/utils.js"></script>
     <script type="text/javascript" src="apigClient.js"></script>
 
+    <meta name="google-signin-client_id"
+        content="911881160050-4osbvf4jo7kk341ja54oubtn5ij7mpr3.apps.googleusercontent.com">
+
 </head>
 
 <body>
     <span style="text-align:center;">
-        <h1>Welcome to BookStore<h1>
+        <h1>Welcome to Product Catalogue</h1>
     </span>
+
     <form>
 
         <ul class="form-style-1">
-            <li><label>UserID <span class="required">*</span></label><input type="text" name="username"
-                    class="field-divided" placeholder="UID" /></li>
-            <li><label>Password <span class="required">*</span></label><input type="password" name="password"
-                    class="field-divided" placeholder="Password" /></li>
-            </li>
             <li>
-                <br></br>
+                <div style="width:200px;" class="g-signin2" data-onsuccess="onSignIn"></div>
+            </li>
             <li><label>Product Id <span class="required">*</span></label><input type="text" name="productid"
                     class="field-divided" placeholder="productid" /></li>
-            <li>
-            <li><label>Name <span class="required">*</span></label><input type="text" name="pname" class="field-divided"
-                    placeholder="pname" /></li>
-            <li>
-            <li>
+            <li><label>Name <span class="required">*</span></label><input type="text" name="name" class="field-divided"
+                    placeholder="name" /></li>
             <li><label>Price <span class="required">*</span></label><input type="text" name="price"
                     class="field-divided" placeholder="price" /></li>
+
             <li>
-            </li>
-            <br></br>
-            <input type="submit" value="Submit" />
+                <input type="submit" value="Submit" />
+
             </li>
         </ul>
     </form>
+
     <div id="results" class="form-style-1"></div>
 </body>
 
 </html>
 <script type="text/javascript">
     var dataResult;
+    var id_token;
+
+    //----------sign-in to google
+    function onSignIn(googleUser) {
+        id_token = googleUser.getAuthResponse().id_token;
+        console.log("google_id_token:" + id_token);
+    }
+
     $(document).ready(function () {
 
-        var apigClient = apigClientFactory.newClient();
         $('form').submit(function (event) {
 
+            // Set the region where your identity pool exists (us-east-1, eu-west-1)
+            AWS.config.region = 'us-east-2';
 
-            //-------------------user pool
-            AWSCognito.config.region = 'us-east-2';
-
-            var poolData = {
-                UserPoolId: 'us-east-2_G3Q4HgJcC', // your user pool id here
-                ClientId: 'shels327pppkovb7n8umgjsqk' // your app client id here
-            };
-            var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
-
-            //------------------Authentication-------------------------
-            var userData = {
-                Username: $('input[name=username]').val(), // your username here
-                Pool: userPool
-            };
-            var authenticationData = {
-                Username: $('input[name=username]').val(), // your username here
-                Password: $('input[name=password]').val(), // your password here
-            };
-            var authenticationDetails = new AWSCognito.CognitoIdentityServiceProvider
-                .AuthenticationDetails(authenticationData);
-
-            var cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
-            cognitoUser.authenticateUser(authenticationDetails, {
-                onSuccess: function (result) {
-                    console.log('id token + ' + result.getIdToken().getJwtToken());
-                    console.log('access token + ' + result.getAccessToken().getJwtToken());
-
-
-                    //--------start calling API Gateway
-                    // get the form data
-                    // there are many ways to get this data using jQuery (you can use the class or id also)
-                    var formData = {};
-
-                    var params = {
-                        //This is where any header, path, or querystring request params go. The key is the parameter named as defined in the API
-                    };
-                    var body = {
-                        //This is where you define the body of the request
-                        "operation": "create",
-                        "payload": {
-                            "TableName": "product",
-                            "Item": {
-                                "productid": $('input[name=productid]').val(),
-                                "name": $('input[name=pname]').val(),
-                                "price": parseInt($('input[name=price]').val())
-                            }
-                        }
-                    };
-                    var additionalParams = {
-                        //If there are any unmodeled query parameters or headers that need to be sent with the request you can add them here
-                        headers: {
-                            "Authorization": result.getIdToken().getJwtToken()
-                        }
-                    };
-
-                    apigClient.productPost(params, body, additionalParams)
-                        .then(function (result) {
-                            console.log(result.data);
-                            dataResult = result.data;
-                            var resultStr = '<b>Product Added</b>';
-                            $('#result').html(resultStr);
-                        }).catch(function (result) {
-                            console.log("error");
-                        });
-
-                    //-------------------------------------------
-                },
-
-                onFailure: function (err) {
-                    alert(err);
-                },
-                mfaRequired: function (codeDeliveryDetails) {
-                    var verificationCode = prompt('Please input verification code', '');
-                    cognitoUser.sendMFACode(verificationCode, this);
+            // Configure the credentials provider to use your identity pool
+            AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+                IdentityPoolId: 'us-east-2:2a888034-0703-493b-afec-b34bf7db0dca',
+                Logins: {
+                    'accounts.google.com': id_token
                 }
             });
 
+            // Make the call to obtain credentials
+            var cognitoToken;
+            AWS.config.credentials.get(function () {
+
+                // Credentials will be available when this function is called.
+                var accessKeyId = AWS.config.credentials.accessKeyId;
+                var secretAccessKey = AWS.config.credentials.secretAccessKey;
+                var sessionToken = AWS.config.credentials.sessionToken;
+
+                //-------------------start calling lambdapost
+                // get the form data
+                // there are many ways to get this data using jQuery (you can use the class or id also)
+
+                //var apigClient = apigClientFactory.newClient();
+                var apigClient = apigClientFactory.newClient({
+                    accessKey: accessKeyId,
+                    secretKey: secretAccessKey,
+                    sessionToken: sessionToken, //OPTIONAL: If you are using temporary credentials you must include the session token
+                    region: "us-east-2"
+                });
+
+                var formData = {};
+
+                var params = {
+                    //This is where any header, path, or querystring request params go. The key is the parameter named as defined in the API
+                };
+                var body = {
+                    //This is where you define the body of the request
+                    "operation": "create",
+                    "payload": {
+                        "TableName": "product",
+                        "Item": {
+                            "productid": $('input[name=productid]').val(),
+                            "name": $('input[name=pname]').val(),
+                            "price": parseInt($('input[name=price]').val())
+                        }
+                    }
+                };
+                var additionalParams = {
+                    //If there are any unmodeled query parameters or headers that need to be sent with the request you can add them here
+                    headers: {
+                        //"Authorization" : AWS.config.credentials.identityId
+                    },
+                    queryParams: {
+
+                    }
+                };
+
+                apigClient.productwithoauthPost(params, body, additionalParams)
+                    .then(function (result) {
+                        console.log(result.data);
+                        dataResult = result.data;
+                        var resultStr = result.data;
+                        $('#results').html(resultStr);
+                    }).catch(function (result) {
+                        console.log("error");
+                    });
+
+                //-------------------------------------------
+
+            });
             return false;
         });
     });
