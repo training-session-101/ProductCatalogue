@@ -165,11 +165,11 @@
 
 
             //-------------------user pool
-            AWSCognito.config.region = 'us-east-2';
+            AWSCognito.config.region = '<Your Region>';
 
             var poolData = {
-                UserPoolId: '<Your Client Id>', // your user pool id here
-                ClientId: '<Your Pool Id>' // your app client id here
+                UserPoolId: '<Your Pool Id>', // your user pool id here
+                ClientId: '<Your Client Id>' // your app client id here
             };
             var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
 
