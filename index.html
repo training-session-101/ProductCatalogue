@@ -123,8 +123,7 @@
     <script type="text/javascript" src="lib/apiGatewayCore/utils.js"></script>
     <script type="text/javascript" src="apigClient.js"></script>
 
-    <meta name="google-signin-client_id"
-        content="911881160050-4osbvf4jo7kk341ja54oubtn5ij7mpr3.apps.googleusercontent.com">
+    <meta name="google-signin-client_id" content="<YOUR CLIENT ID>">
 
 </head>
 
@@ -172,11 +171,11 @@
         $('form').submit(function (event) {
 
             // Set the region where your identity pool exists (us-east-1, eu-west-1)
-            AWS.config.region = 'us-east-2';
+            AWS.config.region = '<YOUR REGION>';
 
             // Configure the credentials provider to use your identity pool
             AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-                IdentityPoolId: 'us-east-2:2a888034-0703-493b-afec-b34bf7db0dca',
+                IdentityPoolId: '<YOUR Identity Pool>',
                 Logins: {
                     'accounts.google.com': id_token
                 }
@@ -200,7 +199,7 @@
                     accessKey: accessKeyId,
                     secretKey: secretAccessKey,
                     sessionToken: sessionToken, //OPTIONAL: If you are using temporary credentials you must include the session token
-                    region: "us-east-2"
+                    region: "<YOUR REGION>"
                 });
 
                 var formData = {};
@@ -212,7 +211,7 @@
                     //This is where you define the body of the request
                     "operation": "create",
                     "payload": {
-                        "TableName": "product",
+                        "TableName": "Product",
                         "Item": {
                             "productid": $('input[name=productid]').val(),
                             "name": $('input[name=pname]').val(),
@@ -230,7 +229,7 @@
                     }
                 };
 
-                apigClient.productwithoauthPost(params, body, additionalParams)
+                apigClient.productdemoPost(params, body, additionalParams)
                     .then(function (result) {
                         console.log(result.data);
                         dataResult = result.data;
